@@ -1,0 +1,13 @@
+services:
+  # VSCode Dev Containersが使用する開発用サービス
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: nutrition-optimizer
+    volumes:
+      # プロジェクト全体(.)をコンテナの/appにマウントする
+      - ..:/app
+      - ${HOME}/.claude:/home/vscode/.claude
+    # この設定により、コンテナが起動し続けてVSCodeが接続できる
+    command: sleep infinity

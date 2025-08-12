@@ -1,0 +1,24 @@
+{
+  "name": "nutrition-optimizer",
+  // 参照するdocker-composeファイルを指定
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
+  "containerEnv": {
+  "PYTHONPATH": "/app/src"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "Anthropic.claude-code"
+      ]
+    }
+  },
+  
+  // コンテナ内でVSCodeが使用するユーザー
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true
+}
