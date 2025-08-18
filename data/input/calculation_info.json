@@ -1,0 +1,11 @@
+{
+  "calculation_params": {
+    "weight": 55.0,
+    "activity_level": "ふつう",
+    "bmr": 1303.5,
+    "energy_needs": 2281.1
+  },
+  "generated_at": "2025-08-14T04:39:48.684123",
+  "version": "1.0",
+  "description": "体重と活動レベルに基づく栄養制約の自動計算結果"
+}
