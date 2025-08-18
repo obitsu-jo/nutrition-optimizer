@@ -28,7 +28,7 @@ class NutritionConstraintMapper:
             'vitamin_k': 'vitamin_k',  # 直接使用
             'thiamin': 'thiamin',  # ビタミンB₁
             'riboflavin': 'riboflavin',  # ビタミンB₂
-            'niacin_equiv': 'niacin_equiv',  # 【最重要】ナイアシン当量（計算済み）
+            'niacin': 'niacin',  # 【修正】ナイアシン（計算前の基本値）
             'vitamin_b6': 'vitamin_b6',  # 直接使用
             'vitamin_b12': 'vitamin_b12',  # 直接使用
             'folate': 'folate',  # 葉酸
@@ -54,7 +54,7 @@ class NutritionConstraintMapper:
             # 脂肪酸（統合データから取得）
             'n3_fatty_acid': 'n3_fatty_acid',  # 脂肪酸統合モジュールから
             'n6_fatty_acid': 'n6_fatty_acid',  # 脂肪酸統合モジュールから
-            'saturated_fat': 'saturated_fat',  # 飽和脂肪酸（後で追加予定）
+            'saturated_fat': 'saturated_fat',  # 飽和脂肪酸
         }
         
         self.load_constraint_list()
@@ -100,11 +100,13 @@ class NutritionConstraintMapper:
             else:
                 # 対応するMEXTデータがない場合は0を設定
                 mapped_data[constraint_id] = 0.0
-                # デバッグ用：一度だけ警告を表示
+                # デバッグ用：脂肪酸以外で実際に不足している項目のみ警告
                 if not hasattr(self, '_warned_mappings'):
                     self._warned_mappings = set()
-                if constraint_id not in self._warned_mappings and constraint_id not in ['n3_fatty_acid', 'n6_fatty_acid', 'saturated_fat']:
-                    print(f"⚠️ マッピング不可: {constraint_id} -> {mext_column}")
+                if (constraint_id not in self._warned_mappings and 
+                    constraint_id not in ['n3_fatty_acid', 'n6_fatty_acid', 'saturated_fat'] and
+                    mext_column is not None):  # マッピング定義があるのにデータがない場合のみ
+                    print(f"⚠️ マッピング不可: {constraint_id} -> {mext_column} (データに存在しない)")
                     self._warned_mappings.add(constraint_id)
         
         return mapped_data

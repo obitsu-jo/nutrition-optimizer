@@ -61,19 +61,19 @@ class FattyAcidIntegrator:
         except (ValueError, TypeError):
             return 0.0
     
-    def calculate_fatty_acids(self, food_name: str) -> Tuple[Optional[float], Optional[float]]:
+    def calculate_fatty_acids(self, food_name: str) -> Tuple[Optional[float], Optional[float], Optional[float]]:
         """
-        食品名に基づいてn-3系、n-6系脂肪酸を取得
+        食品名に基づいてn-3系、n-6系脂肪酸、飽和脂肪酸を取得
         改善されたマッチングロジック：完全一致 > 詳細一致 > 部分一致
         
         Args:
             food_name: 食品名（例: "こめ　［水稲穀粒］　精白米　うるち米"）
             
         Returns:
-            Tuple[n3_fatty_acid, n6_fatty_acid] (g/100g)
+            Tuple[n3_fatty_acid, n6_fatty_acid, saturated_fat] (g/100g)
         """
         if self.fatty_acid_data is None:
-            return None, None
+            return None, None, None
         
         try:
             # Step 1: 完全一致を優先
@@ -85,7 +85,8 @@ class FattyAcidIntegrator:
                 match = exact_match.iloc[0]
                 n3_value = match['n3_fatty_acid'] if pd.notna(match['n3_fatty_acid']) else 0.0
                 n6_value = match['n6_fatty_acid'] if pd.notna(match['n6_fatty_acid']) else 0.0
-                return n3_value, n6_value
+                saturated_value = match['saturated_fat'] if pd.notna(match['saturated_fat']) else 0.0
+                return n3_value, n6_value, saturated_value
             
             # Step 2: より多くのキーワードがマッチする食品を優先
             # 食品名からキーワードを抽出
@@ -103,7 +104,8 @@ class FattyAcidIntegrator:
                     best_match = matches.iloc[0]
                     n3_value = best_match['n3_fatty_acid'] if pd.notna(best_match['n3_fatty_acid']) else 0.0
                     n6_value = best_match['n6_fatty_acid'] if pd.notna(best_match['n6_fatty_acid']) else 0.0
-                    return n3_value, n6_value
+                    saturated_value = best_match['saturated_fat'] if pd.notna(best_match['saturated_fat']) else 0.0
+                    return n3_value, n6_value, saturated_value
             
             # Step 3: 従来の部分一致検索（最後の手段）
             matches = self.fatty_acid_data[
@@ -122,13 +124,14 @@ class FattyAcidIntegrator:
                 match = matches.iloc[0]
                 n3_value = match['n3_fatty_acid'] if pd.notna(match['n3_fatty_acid']) else 0.0
                 n6_value = match['n6_fatty_acid'] if pd.notna(match['n6_fatty_acid']) else 0.0
-                return n3_value, n6_value
+                saturated_value = match['saturated_fat'] if pd.notna(match['saturated_fat']) else 0.0
+                return n3_value, n6_value, saturated_value
             
-            return 0.0, 0.0  # マッチしない場合は0を返す
+            return 0.0, 0.0, 0.0  # マッチしない場合は0を返す
             
         except Exception as e:
             print(f"⚠️ 脂肪酸計算エラー ({food_name}): {e}")
-            return 0.0, 0.0
+            return 0.0, 0.0, 0.0
     
     def get_fatty_acid_mapping(self) -> Dict[str, Tuple[Optional[float], Optional[float]]]:
         """

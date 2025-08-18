@@ -64,95 +64,120 @@ def add_new_food(foods_list, db):
         print(f"'{food_name_input}'に一致する食品が見つかりませんでした。")
         return False
     
-    # 検索結果を表示
-    print(f"\n'{food_name_input}'の検索結果:")
-    for i, match in enumerate(matches[:10]):
-        calories = match.get('energy_kcal', 'N/A')
-        protein = match.get('protein', 'N/A')
-        fat = match.get('fat', 'N/A')
-        carb = match.get('carb_available', 'N/A')
-        print(f"  {i+1}. {match['food_name']}")
-        print(f"     エネルギー: {calories} kcal, たんぱく質: {protein} g, 脂質: {fat} g, 炭水化物: {carb} g")
+    # ページネーション付きで検索結果を表示
+    page_size = 20
+    current_page = 0
+    total_pages = (len(matches) - 1) // page_size + 1
     
-    if len(matches) > 10:
-        print(f"... 他{len(matches) - 10}件")
-    
-    # 選択
-    try:
-        choice = int(input("\n番号を選択してください (0=キャンセル): "))
-        if choice == 0:
+    while True:
+        print(f"\n'{food_name_input}'の検索結果 (ページ {current_page + 1}/{total_pages}, 全{len(matches)}件):")
+        
+        start_idx = current_page * page_size
+        end_idx = min(start_idx + page_size, len(matches))
+        
+        for i in range(start_idx, end_idx):
+            match = matches[i]
+            calories = match.get('energy_kcal', 'N/A')
+            protein = match.get('protein', 'N/A')
+            fat = match.get('fat', 'N/A')
+            carb = match.get('carb_available', 'N/A')
+            print(f"  {i+1}. {match['food_name']}")
+            print(f"     エネルギー: {calories} kcal, たんぱく質: {protein} g, 脂質: {fat} g, 炭水化物: {carb} g")
+        
+        # ページナビゲーション
+        nav_options = []
+        if current_page > 0:
+            nav_options.append("p: 前のページ")
+        if current_page < total_pages - 1:
+            nav_options.append("n: 次のページ")
+        nav_options.extend(["番号: 食品を選択", "0: キャンセル"])
+        
+        print(f"\n操作: {', '.join(nav_options)}")
+        user_input = input("選択してください: ").strip().lower()
+        
+        if user_input == '0':
             return False
-        if 1 <= choice <= len(matches):
-            selected = matches[choice - 1]
-            print(selected)
-            
-            # 既に選択済みかチェック
-            existing_food = next((food for food in foods_list if food['food_name'] == selected['food_name']), None)
-            if existing_food:
-                overwrite = input(f"'{selected['food_name']}'は既に登録済みです。上書きしますか？ (y/N): ").strip().lower()
-                if overwrite != 'y':
-                    return False
-                # 既存の価格・制約情報を保持
-                selected['price'] = existing_food.get('price', 0)
-                selected['unit'] = existing_food.get('unit', '100g')
-                selected['min_units'] = existing_food.get('min_units', '')
-                selected['max_units'] = existing_food.get('max_units', '')
-                selected['enabled'] = existing_food.get('enabled', 'TRUE')
-                # 既存エントリを削除
-                foods_list[:] = [food for food in foods_list if food['food_name'] != selected['food_name']]
-            else:
-                # 価格と単位を入力
-                while True:
-                    try:
-                        price = float(input(f"'{selected['food_name']}'の価格（円）: "))
-                        if price < 0:
-                            print("価格は0以上で入力してください。")
-                            continue
-                        break
-                    except ValueError:
-                        print("有効な数値を入力してください。")
-                
-                # 単位を選択
-                print("\n単位を選択してください:")
-                unit_options = ['100g', '1個', '1本', '1枚', '1kg', '1袋', '1缶', '1パック']
-                for i, unit_opt in enumerate(unit_options, 1):
-                    print(f"  {i}. {unit_opt}")
-                print("  9. カスタム単位")
-                
-                while True:
-                    try:
-                        unit_choice = int(input("番号を選択してください: "))
-                        if 1 <= unit_choice <= 8:
-                            unit = unit_options[unit_choice - 1]
-                            break
-                        elif unit_choice == 9:
-                            unit = input("カスタム単位を入力してください: ").strip()
-                            if unit:
-                                break
-                            else:
-                                print("単位を入力してください。")
-                        else:
-                            print("有効な番号を選択してください。")
-                    except ValueError:
-                        print("有効な数値を入力してください。")
-                
-                # 制約情報を設定
-                selected['price'] = price
-                selected['unit'] = unit
-                selected['min_units'] = ''  # 初期値として空文字（下限なし）
-                selected['max_units'] = ''  # 初期値として空文字（上限なし）
-                selected['enabled'] = 'TRUE'
-            
-            # リストに追加
-            foods_list.append(selected)
-            print(f"✅ '{selected['food_name']}'を追加しました。")
-            return True
+        elif user_input == 'p' and current_page > 0:
+            current_page -= 1
+            continue
+        elif user_input == 'n' and current_page < total_pages - 1:
+            current_page += 1
+            continue
         else:
-            print("無効な番号です。")
+            # 数値入力として処理
+            try:
+                choice = int(user_input)
+                if 1 <= choice <= len(matches):
+                    selected = matches[choice - 1]
+                    break
+                else:
+                    print("無効な番号です。")
+                    continue
+            except ValueError:
+                print("有効な入力をしてください。")
+                continue
+    
+    # 既に選択済みかチェック
+    existing_food = next((food for food in foods_list if food['food_name'] == selected['food_name']), None)
+    if existing_food:
+        overwrite = input(f"'{selected['food_name']}'は既に登録済みです。上書きしますか？ (y/N): ").strip().lower()
+        if overwrite != 'y':
             return False
-    except ValueError:
-        print("有効な数値を入力してください。")
-        return False
+        # 既存の価格・制約情報を保持
+        selected['price'] = existing_food.get('price', 0)
+        selected['unit'] = existing_food.get('unit', '100g')
+        selected['min_units'] = existing_food.get('min_units', '')
+        selected['max_units'] = existing_food.get('max_units', '')
+        selected['enabled'] = existing_food.get('enabled', 'TRUE')
+        # 既存エントリを削除
+        foods_list[:] = [food for food in foods_list if food['food_name'] != selected['food_name']]
+    else:
+        # 価格と単位を入力
+        while True:
+            try:
+                price = float(input(f"'{selected['food_name']}'の価格（円）: "))
+                if price < 0:
+                    print("価格は0以上で入力してください。")
+                    continue
+                break
+            except ValueError:
+                print("有効な数値を入力してください。")
+        
+        # 単位を選択
+        print("\n単位を選択してください:")
+        unit_options = ['100g', '1個', '1本', '1枚', '1kg', '1袋', '1缶', '1パック']
+        for i, unit_opt in enumerate(unit_options, 1):
+            print(f"  {i}. {unit_opt}")
+        print("  9. カスタム単位")
+        
+        while True:
+            try:
+                unit_choice = int(input("番号を選択してください: "))
+                if 1 <= unit_choice <= 8:
+                    unit = unit_options[unit_choice - 1]
+                    break
+                elif unit_choice == 9:
+                    unit = input("カスタム単位を入力してください: ").strip()
+                    if unit:
+                        break
+                    else:
+                        print("単位を入力してください。")
+                else:
+                    print("有効な番号を選択してください。")
+            except ValueError:
+                print("有効な数値を入力してください。")
+        
+        # 制約情報を設定
+        selected['price'] = price
+        selected['unit'] = unit
+        selected['min_units'] = ''  # 初期値として空文字（下限なし）
+        selected['max_units'] = ''  # 初期値として空文字（上限なし）
+        selected['enabled'] = 'TRUE'
+    
+    # リストに追加
+    foods_list.append(selected)
+    print(f"✅ '{selected['food_name']}'を追加しました。")
+    return True
 
 def interactive_food_selection():
     """対話式で食品を選択し、価格を設定（既存ファイル追加方式）"""

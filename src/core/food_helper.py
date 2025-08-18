@@ -110,10 +110,11 @@ class FoodCompositionDatabase:
                         else:  # 小さな値は小数点3桁
                             nutrition_data[col] = round(val, 3)
                 
-                # 脂肪酸データを統合
-                n3_fatty_acid, n6_fatty_acid = self.fatty_acid_integrator.calculate_fatty_acids(row['food_name'])
+                # 脂肪酸データを統合（n-3, n-6, 飽和脂肪酸）
+                n3_fatty_acid, n6_fatty_acid, saturated_fat = self.fatty_acid_integrator.calculate_fatty_acids(row['food_name'])
                 nutrition_data['n3_fatty_acid'] = round(n3_fatty_acid, 3) if n3_fatty_acid is not None else 0.0
                 nutrition_data['n6_fatty_acid'] = round(n6_fatty_acid, 3) if n6_fatty_acid is not None else 0.0
+                nutrition_data['saturated_fat'] = round(saturated_fat, 3) if saturated_fat is not None else 0.0
                 
                 # 34栄養制約に対応するデータのみを抽出
                 mapped_nutrition_data = self.constraint_mapper.extract_mapped_nutrition_data(nutrition_data)

@@ -8,8 +8,12 @@
       "Bash(mv:*)",
       "Bash(rm:*)",
       "Bash(sed:*)",
-      "mcp__serena__replace_regex"
-    ]
+      "mcp__serena__replace_regex",
+      "mcp__serena__find_symbol",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__get_symbols_overview"
+    ],
+    "defaultMode": "acceptEdits"
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
