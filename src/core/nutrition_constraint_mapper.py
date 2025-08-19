@@ -70,13 +70,13 @@ class NutritionConstraintMapper:
                 # enabledに関係なく全制約を取得（foods.csvには全34項目を記載）
                 self.active_nutrient_ids = df['nutrient_id'].tolist()
                 enabled_count = len(df[df['enabled'] == True]) if 'enabled' in df.columns else len(df)
-                print(f"📋 全栄養制約: {len(self.active_nutrient_ids)}項目（有効: {enabled_count}項目）")
+                print(f"全栄養制約: {len(self.active_nutrient_ids)}項目（有効: {enabled_count}項目）")
             else:
-                print("⚠️ nutrition_constraints.csvが見つかりません")
+                print("nutrition_constraints.csvが見つかりません")
                 self.active_nutrient_ids = []
                 
         except Exception as e:
-            print(f"❌ 制約リスト読み込みエラー: {e}")
+            print(f"制約リスト読み込みエラー: {e}")
             self.active_nutrient_ids = []
     
     def extract_mapped_nutrition_data(self, full_nutrition_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -106,7 +106,7 @@ class NutritionConstraintMapper:
                 if (constraint_id not in self._warned_mappings and 
                     constraint_id not in ['n3_fatty_acid', 'n6_fatty_acid', 'saturated_fat'] and
                     mext_column is not None):  # マッピング定義があるのにデータがない場合のみ
-                    print(f"⚠️ マッピング不可: {constraint_id} -> {mext_column} (データに存在しない)")
+                    print(f"マッピング不可: {constraint_id} -> {mext_column} (データに存在しない)")
                     self._warned_mappings.add(constraint_id)
         
         return mapped_data

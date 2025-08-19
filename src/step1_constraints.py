@@ -29,11 +29,11 @@ def get_user_profile():
         try:
             weight = float(input("体重を入力してください (kg): "))
             if weight <= 0 or weight > 300:
-                print("❌ 適切な体重を入力してください (1-300kg)")
+                print("ERROR: 適切な体重を入力してください (1-300kg)")
                 continue
             break
         except ValueError:
-            print("❌ 有効な数値を入力してください")
+            print("ERROR: 有効な数値を入力してください")
     
     # 身体活動レベルの選択
     print(f"\n身体活動レベルを選択してください:")
@@ -56,7 +56,7 @@ def get_user_profile():
             activity_level = activity_mapping[choice]
             break
         else:
-            print("❌ 1, 2, 3のいずれかを入力してください")
+            print("ERROR: 1, 2, 3のいずれかを入力してください")
     
     return weight, activity_level
 
@@ -206,7 +206,7 @@ def main():
         weight, activity_level = get_user_profile()
         
         # 栄養制約を計算
-        print(f"\n🔄 栄養制約を計算しています...")
+        print(f"\n>>> 栄養制約を計算しています...")
         calc_result = calculator.calculate_all_constraints(weight, activity_level)
         
         # 計算結果を表示
@@ -214,7 +214,7 @@ def main():
         constraints = calc_result["nutrition_constraints"]
         
         print(f"\n" + "="*60)
-        print("📊 栄養制約計算結果")
+        print("*** 栄養制約計算結果 ***")
         print("="*60)
         
         print(f"\n基本情報:")
@@ -223,28 +223,28 @@ def main():
         print(f"  基礎代謝量: {params['bmr']} kcal/日")
         print(f"  推定エネルギー必要量: {params['energy_needs']} kcal/日")
         
-        print(f"\n📊 栄養制約: {len(constraints)}項目")
+        print(f"\n*** 栄養制約: {len(constraints)}項目 ***")
         
         # ハイブリッド形式で保存
-        print(f"\n💾 ハイブリッド形式で保存しています...")
+        print(f"\n>>> ハイブリッド形式で保存しています...")
         file_paths = save_hybrid_constraints(calc_result)
         
         # 最終サマリー
         print("\n" + "="*60)
-        print("✅ ハイブリッド形式制約条件設定完了")
+        print("完了: ハイブリッド形式制約条件設定完了")
         print("="*60)
         
-        print(f"\n📄 生成されたファイル:")
-        print(f"  📊 {file_paths['nutrition_constraints']}")
-        print(f"  ⚙️  {file_paths['calculation_info']}")
+        print(f"\n生成されたファイル:")
+        print(f"  - {file_paths['nutrition_constraints']}")
+        print(f"  - {file_paths['calculation_info']}")
         
-        print(f"\n✨ 利点:")
-        print("  • CSV形式: スプレッドシートで編集可能")
-        print("  • カテゴリ別整理: 栄養素を分類して表示")
-        print("  • enabled列: 個別の制約ON/OFF切り替え可能")
-        print("  • JSON形式: 計算パラメータを保存")
+        print(f"\n利点:")
+        print("  - CSV形式: スプレッドシートで編集可能")
+        print("  - カテゴリ別整理: 栄養素を分類して表示")
+        print("  - enabled列: 個別の制約ON/OFF切り替え可能")
+        print("  - JSON形式: 計算パラメータを保存")
         
-        print(f"\n📋 次のステップ:")
+        print(f"\n次のステップ:")
         print("1. CSVファイルを編集して制約を調整（オプション）")
         print("2. src/step2_foods.py で食品情報を設定（食品制約テンプレートも自動生成）")
         print("3. src/step3_optimize.py で最適化を実行")
@@ -255,7 +255,7 @@ def main():
         print("\n\n操作が中断されました。")
         return False
     except Exception as e:
-        print(f"\n❌ エラーが発生しました: {e}")
+        print(f"\nERROR: エラーが発生しました: {e}")
         return False
 
 if __name__ == "__main__":

@@ -23,13 +23,13 @@ def load_existing_foods():
         try:
             existing_df = pd.read_csv(foods_path)
             foods_list = existing_df.to_dict('records')
-            print(f"📂 既存のfoods.csvを読み込みました: {len(foods_list)}品目")
+            print(f"読み込み: 既存のfoods.csvを読み込みました: {len(foods_list)}品目")
             return foods_list, foods_path
         except Exception as e:
-            print(f"⚠️ 既存ファイル読み込みエラー: {e}")
+            print(f"WARNING: 既存ファイル読み込みエラー: {e}")
             return [], foods_path
     else:
-        print("📝 新規foods.csvを作成します")
+        print(">>> 新規foods.csvを作成します")
         return [], foods_path
 
 def show_existing_foods(foods_list):
@@ -46,9 +46,9 @@ def show_existing_foods(foods_list):
         min_units = food.get('min_units', '')
         max_units = food.get('max_units', '')
         enabled = food.get('enabled', 'TRUE')
-        status = "🔴" if enabled != 'TRUE' else "🟢"
-        range_display = f"{min_units or '0'}-{max_units or '∞'}単位"
-        print(f"  {i:2d}. {status} {name}")
+        status = "DISABLED" if enabled != 'TRUE' else "ENABLED"
+        range_display = f"{min_units or '0'}-{max_units or '無制限'}単位"
+        print(f"  {i:2d}. [{status}] {name}")
         print(f"      価格: {price}円/{unit}, 制限: {range_display}")
 
 def add_new_food(foods_list, db):
@@ -176,7 +176,7 @@ def add_new_food(foods_list, db):
     
     # リストに追加
     foods_list.append(selected)
-    print(f"✅ '{selected['food_name']}'を追加しました。")
+    print(f"OK: '{selected['food_name']}'を追加しました。")
     return True
 
 def interactive_food_selection():
@@ -188,7 +188,7 @@ def interactive_food_selection():
     db = FoodCompositionDatabase()
     
     if db.food_data is None or db.food_data.empty:
-        print("❌ 食品成分データベースの読み込みに失敗しました。")
+        print("ERROR: 食品成分データベースの読み込みに失敗しました。")
         print("data/raw/食品成分表ファイルが存在することを確認してください。")
         return False
     
@@ -201,7 +201,7 @@ def interactive_food_selection():
     while True:
         # メニュー表示
         print("\n" + "="*50)
-        print("📋 操作メニュー:")
+        print("*** 操作メニュー ***")
         print("  add    : 新しい食品を追加")
         print("  list   : 登録済み食品を表示") 
         print("  quit   : 保存して終了")
@@ -216,7 +216,7 @@ def interactive_food_selection():
         elif action == 'add':
             add_new_food(foods_list, db)
         else:
-            print("❌ 無効な操作です。add/list/quit のいずれかを入力してください。")
+            print("ERROR: 無効な操作です。add/list/quit のいずれかを入力してください。")
 
     # CSVファイルを保存
     if foods_list:
@@ -233,12 +233,12 @@ def interactive_food_selection():
             df = df[available_columns]
             
         except Exception as e:
-            print(f"⚠️ 列並び替えエラー: {e}")
+            print(f"WARNING: 列並び替えエラー: {e}")
         
         df.to_csv(foods_path, index=False, encoding='utf-8')
         
-        print(f"\n✅ {len(foods_list)}件の食品データを保存しました:")
-        print(f"   📊 {foods_path} (制約情報統合済み)")
+        print(f"\n保存完了: {len(foods_list)}件の食品データを保存しました:")
+        print(f"   {foods_path} (制約情報統合済み)")
         
         # サマリー表示
         print(f"\n=== 最終食品データサマリー ===")
@@ -247,11 +247,11 @@ def interactive_food_selection():
             print(f"  エネルギー: {food.get('energy_kcal', 'N/A')} kcal, "
                   f"たんぱく質: {food.get('protein', 'N/A')} g")
         
-        print(f"\n📝 食品制約設定:")
+        print(f"\n食品制約設定:")
         print("foods.csv ファイルの min_units, max_units列を編集して各食品の摂取単位数制限を設定してください。")
         print("min_units: 最小単位数（空=下限なし）, max_units: 最大単位数（空=上限なし）, enabled: TRUE/FALSE で有効/無効切り替え")
         
-        print(f"\n📋 次のステップ:")
+        print(f"\n次のステップ:")
         print("1. foods.csv の min_units, max_units, enabled列を編集して食品制約を設定（オプション）")
         print("2. src/step3_optimize.py で最適化を実行")
         

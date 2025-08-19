@@ -20,9 +20,9 @@ class NutritionCalculator:
             csv_path = os.path.join(self.base_dir, 'docs', '18~29_men.csv')
             # すべての列を文字列として読み込み、後で数値変換
             self.standards = pd.read_csv(csv_path, encoding='utf-8', on_bad_lines='skip', dtype=str)
-            print(f"✅ 栄養基準データを読み込みました: {len(self.standards)}項目")
+            print(f"栄養基準データを読み込みました: {len(self.standards)}項目")
         except Exception as e:
-            print(f"❌ 栄養基準データの読み込みエラー: {e}")
+            print(f"栄養基準データの読み込みエラー: {e}")
             self.standards = pd.DataFrame()
     
     def calculate_bmr_and_energy(self, weight: float, activity_level: str = "ふつう") -> Tuple[float, float]:

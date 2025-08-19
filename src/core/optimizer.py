@@ -44,7 +44,7 @@ def create_optimization_model(foods: pd.DataFrame, constraints: Dict[str, Any]) 
             if 'max' in constraint:
                 problem += total_nutrient <= constraint['max']
             
-            print(f"制約追加: {nutrient_name} ({constraint.get('min', 0)} - {constraint.get('max', '∞')} {constraint.get('unit', '')})")
+            print(f"制約追加: {nutrient_name} ({constraint.get('min', 0)} - {constraint.get('max', '無制限')} {constraint.get('unit', '')})")
     
     # 食品摂取単位数制約（上限・下限）
     food_constraints = constraints['food_constraints']
@@ -65,13 +65,13 @@ def solve_optimization(problem: pulp.LpProblem, food_vars: Dict[str, pulp.LpVari
     """最適化問題を解く"""
     
     # デバッグ情報を出力
-    print(f"🔍 最適化問題の詳細:")
+    print(f"最適化問題の詳細:")
     print(f"  • 変数数: {len(food_vars)}")
     print(f"  • 制約数: {len(problem.constraints)}")
     
     # 制約の厳しさを警告
     if len(food_vars) < 10:
-        print(f"⚠️  注意: 食品種類が少ない({len(food_vars)}種類)ため、制約を満たすのに非効率な組み合わせが必要になる可能性があります")
+        print(f"注意: 食品種類が少ない({len(food_vars)}種類)ため、制約を満たすのに非効率な組み合わせが必要になる可能性があります")
     
     # 求解
     status = problem.solve(pulp.PULP_CBC_CMD(msg=1))

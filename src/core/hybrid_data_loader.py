@@ -32,9 +32,9 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     if 'enabled' in foods.columns:
         original_count = len(foods)
         foods = foods[foods['enabled'] == True].copy()
-        print(f"📊 食品データ: {len(foods)}種類の食品を読み込みました (全{original_count}種類中の有効な食品)")
+        print(f"食品データ: {len(foods)}種類の食品を読み込みました (全{original_count}種類中の有効な食品)")
     else:
-        print(f"📊 食品データ: {len(foods)}種類の食品を読み込みました")
+        print(f"食品データ: {len(foods)}種類の食品を読み込みました")
     
     # 2. 栄養制約をCSVから読み込み
     nutrition_constraints_path = os.path.join(input_dir, 'nutrition_constraints.csv')
@@ -62,9 +62,9 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
             if constraint:  # 空でない場合のみ追加
                 nutrition_constraints[row['nutrient_id']] = constraint
         
-        print(f"🔬 栄養制約: {len(nutrition_constraints)}項目を読み込みました")
+        print(f"栄養制約: {len(nutrition_constraints)}項目を読み込みました")
     else:
-        print("⚠️  nutrition_constraints.csvが見つかりません")
+        print("nutrition_constraints.csvが見つかりません")
     
     # 3. 食品制約をfoods.csvから読み込み（単位数ベース）
     food_constraints = {}
@@ -89,7 +89,7 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         if constraint:
             food_constraints[row['food_name']] = constraint
     
-    print(f"🍽️  食品制約: {len(food_constraints)}項目を読み込みました")
+    print(f"食品制約: {len(food_constraints)}項目を読み込みました")
     
     # 4. 計算情報をJSONから読み込み
     calc_info_path = os.path.join(input_dir, 'calculation_info.json')
@@ -98,24 +98,24 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     if os.path.exists(calc_info_path):
         with open(calc_info_path, 'r', encoding='utf-8') as f:
             calculation_info = json.load(f)
-        print(f"⚙️  計算情報を読み込みました")
+        print(f"計算情報を読み込みました")
     else:
-        print("⚠️  calculation_info.jsonが見つかりません")
+        print("calculation_info.jsonが見つかりません")
     
     # 5. 食品データのサンプル表示
     if not foods.empty:
         sample_foods = foods.head(3)
-        print(f"\n📋 食品サンプル:")
+        print(f"\n食品サンプル:")
         for _, food in sample_foods.iterrows():
             print(f"  • {food['food_name']}: {food.get('energy_kcal', 'N/A')} kcal, "
                   f"たんぱく質 {food.get('protein', 'N/A')} g")
         
         nutrition_cols = [col for col in foods.columns if col not in ['food_name', 'price_per_100g']]
-        print(f"\n🔬 利用可能な栄養素データ: {len(nutrition_cols)}項目")
+        print(f"\n利用可能な栄養素データ: {len(nutrition_cols)}項目")
     
     # 6. 制約条件のサマリー表示
     if nutrition_constraints:
-        print(f"\n📊 栄養制約サマリー:")
+        print(f"\n栄養制約サマリー:")
         
         # カテゴリ別に表示（CSVにカテゴリがある場合）
         if os.path.exists(nutrition_constraints_path):
@@ -164,15 +164,15 @@ def load_data(foods_path: str, constraints_path: str = None) -> Tuple[pd.DataFra
     if constraints_path and os.path.exists(constraints_path):
         # 従来のJSON形式
         constraints = load_constraints(constraints_path)
-        print(f"📊 従来形式で読み込み: 食品{len(foods)}種類")
+        print(f"従来形式で読み込み: 食品{len(foods)}種類")
     else:
         # ハイブリッド形式を試行
         base_dir = os.path.dirname(os.path.dirname(foods_path))
         try:
             _, constraints = load_hybrid_data(base_dir)
-            print(f"📊 ハイブリッド形式で読み込み: 食品{len(foods)}種類")
+            print(f"ハイブリッド形式で読み込み: 食品{len(foods)}種類")
         except Exception as e:
-            print(f"⚠️  ハイブリッド形式の読み込みに失敗: {e}")
+            print(f"ハイブリッド形式の読み込みに失敗: {e}")
             constraints = {"nutrition_constraints": {}, "food_constraints": {}}
     
     return foods, constraints

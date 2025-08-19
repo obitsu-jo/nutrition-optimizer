@@ -40,10 +40,10 @@ class FattyAcidIntegrator:
             for col in ['saturated_fat', 'polyunsaturated_fat', 'n3_fatty_acid', 'n6_fatty_acid']:
                 self.fatty_acid_data[col] = self.fatty_acid_data[col].apply(self._clean_numeric_value)
             
-            print(f"📊 脂肪酸データ: {len(self.fatty_acid_data)}件の食品データを読み込みました")
+            print(f"脂肪酸データ: {len(self.fatty_acid_data)}件の食品データを読み込みました")
             
         except Exception as e:
-            print(f"❌ 脂肪酸データの読み込みに失敗: {e}")
+            print(f"脂肪酸データの読み込みに失敗: {e}")
             self.fatty_acid_data = None
     
     def _clean_numeric_value(self, val):
@@ -130,7 +130,7 @@ class FattyAcidIntegrator:
             return 0.0, 0.0, 0.0  # マッチしない場合は0を返す
             
         except Exception as e:
-            print(f"⚠️ 脂肪酸計算エラー ({food_name}): {e}")
+            print(f"脂肪酸計算エラー ({food_name}): {e}")
             return 0.0, 0.0, 0.0
     
     def get_fatty_acid_mapping(self) -> Dict[str, Tuple[Optional[float], Optional[float]]]:
