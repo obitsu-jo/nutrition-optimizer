@@ -40,7 +40,7 @@ def show_existing_foods(foods_list):
     
     print(f"\n=== 登録済み食品 ({len(foods_list)}品目) ===")
     for i, food in enumerate(foods_list, 1):
-        name = food.get('food_name', 'N/A')
+        name = food.get('名前', 'N/A')
         price = food.get('price', 'N/A')
         unit = food.get('unit', 'N/A')
         min_units = food.get('min_units', '')
@@ -77,11 +77,11 @@ def add_new_food(foods_list, db):
         
         for i in range(start_idx, end_idx):
             match = matches[i]
-            calories = match.get('energy_kcal', 'N/A')
-            protein = match.get('protein', 'N/A')
-            fat = match.get('fat', 'N/A')
-            carb = match.get('carb_available', 'N/A')
-            print(f"  {i+1}. {match['food_name']}")
+            calories = match.get('エネルギー', 'N/A')
+            protein = match.get('たんぱく質', 'N/A')
+            fat = match.get('脂質', 'N/A')
+            carb = match.get('炭水化物', 'N/A')
+            print(f"  {i+1}. {match['名前']}")
             print(f"     エネルギー: {calories} kcal, たんぱく質: {protein} g, 脂質: {fat} g, 炭水化物: {carb} g")
         
         # ページナビゲーション
@@ -118,9 +118,9 @@ def add_new_food(foods_list, db):
                 continue
     
     # 既に選択済みかチェック
-    existing_food = next((food for food in foods_list if food['food_name'] == selected['food_name']), None)
+    existing_food = next((food for food in foods_list if food['名前'] == selected['名前']), None)
     if existing_food:
-        overwrite = input(f"'{selected['food_name']}'は既に登録済みです。上書きしますか？ (y/N): ").strip().lower()
+        overwrite = input(f"'{selected['名前']}'は既に登録済みです。上書きしますか？ (y/N): ").strip().lower()
         if overwrite != 'y':
             return False
         # 既存の価格・制約情報を保持
@@ -130,12 +130,12 @@ def add_new_food(foods_list, db):
         selected['max_units'] = existing_food.get('max_units', '')
         selected['enabled'] = existing_food.get('enabled', 'TRUE')
         # 既存エントリを削除
-        foods_list[:] = [food for food in foods_list if food['food_name'] != selected['food_name']]
+        foods_list[:] = [food for food in foods_list if food['名前'] != selected['名前']]
     else:
         # 価格と単位を入力
         while True:
             try:
-                price = float(input(f"'{selected['food_name']}'の価格（円）: "))
+                price = float(input(f"'{selected['名前']}'の価格（円）: "))
                 if price < 0:
                     print("価格は0以上で入力してください。")
                     continue
@@ -176,7 +176,7 @@ def add_new_food(foods_list, db):
     
     # リストに追加
     foods_list.append(selected)
-    print(f"OK: '{selected['food_name']}'を追加しました。")
+    print(f"OK: '{selected['名前']}'を追加しました。")
     return True
 
 def interactive_food_selection():
@@ -222,20 +222,29 @@ def interactive_food_selection():
     if foods_list:
         df = pd.DataFrame(foods_list)
         
-        # 列順序を制約対応順に並び替え
+        # nutrition_complete.csvと同じ列順序に並び替え
         try:
-            from core.nutrition_constraint_mapper import NutritionConstraintMapper
-            mapper = NutritionConstraintMapper()
-            column_order = mapper.get_constraint_column_order()
+            # nutrition_complete.csvから正しい列順序を取得
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            complete_csv_path = os.path.join(base_dir, 'data', 'input', 'nutrition_complete.csv')
+            complete_df = pd.read_csv(complete_csv_path, nrows=1)
+            nutrition_columns = complete_df.columns.tolist()
+            
+            # 目標列順序：日本語栄養素列 + 価格情報列
+            target_columns = nutrition_columns + ['price', 'unit', 'min_units', 'max_units', 'enabled']
             
             # 存在する列のみを選択して並び替え
-            available_columns = [col for col in column_order if col in df.columns]
-            df = df[available_columns]
+            available_columns = [col for col in target_columns if col in df.columns]
+            df_ordered = df[available_columns]
+            
+            print(f"列順序確認: {len(available_columns)}列 (最初の5列: {available_columns[:5]})")
             
         except Exception as e:
             print(f"WARNING: 列並び替えエラー: {e}")
+            df_ordered = df
         
-        df.to_csv(foods_path, index=False, encoding='utf-8')
+        df_ordered.to_csv(foods_path, index=False, encoding='utf-8')
         
         print(f"\n保存完了: {len(foods_list)}件の食品データを保存しました:")
         print(f"   {foods_path} (制約情報統合済み)")
@@ -243,9 +252,9 @@ def interactive_food_selection():
         # サマリー表示
         print(f"\n=== 最終食品データサマリー ===")
         for food in foods_list:
-            print(f"- {food['food_name']}: {food.get('price', 'N/A')}円/{food.get('unit', 'N/A')}")
-            print(f"  エネルギー: {food.get('energy_kcal', 'N/A')} kcal, "
-                  f"たんぱく質: {food.get('protein', 'N/A')} g")
+            print(f"- {food['名前']}: {food.get('price', 'N/A')}円/{food.get('unit', 'N/A')}")
+            print(f"  エネルギー: {food.get('エネルギー', 'N/A')} kcal, "
+                  f"たんぱく質: {food.get('たんぱく質', 'N/A')} g")
         
         print(f"\n食品制約設定:")
         print("foods.csv ファイルの min_units, max_units列を編集して各食品の摂取単位数制限を設定してください。")

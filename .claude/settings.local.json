@@ -13,7 +13,11 @@
       "mcp__serena__replace_symbol_body",
       "mcp__serena__get_symbols_overview",
       "mcp__serena__search_for_pattern",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__onboarding",
+      "mcp__serena__write_memory",
+      "Bash(cp:*)"
     ],
     "defaultMode": "acceptEdits"
   },

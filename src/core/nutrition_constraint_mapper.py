@@ -112,9 +112,21 @@ class NutritionConstraintMapper:
         return mapped_data
     
     def get_constraint_column_order(self) -> List[str]:
-        """CSVの列順序を取得（food_name + 制約順 + 価格・制約情報）"""
-        columns = ['food_name'] + self.active_nutrient_ids + ['price', 'unit', 'min_units', 'max_units', 'enabled']
-        return columns
+        """CSVの列順序を取得（名前 + 日本語栄養素列順 + 価格・制約情報）"""
+        # nutrition_complete.csvと同じ列順序を使用
+        try:
+            import pandas as pd
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            complete_csv_path = os.path.join(base_dir, 'data', 'input', 'nutrition_complete.csv')
+            complete_df = pd.read_csv(complete_csv_path, nrows=1)
+            nutrition_columns = complete_df.columns.tolist()
+            columns = nutrition_columns + ['price', 'unit', 'min_units', 'max_units', 'enabled']
+            return columns
+        except Exception:
+            # フォールバック: 旧形式
+            columns = ['名前'] + self.active_nutrient_ids + ['price', 'unit', 'min_units', 'max_units', 'enabled']
+            return columns
 
 if __name__ == "__main__":
     # テスト実行

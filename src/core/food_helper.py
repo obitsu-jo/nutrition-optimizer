@@ -6,49 +6,32 @@
 
 import pandas as pd
 import os
-import json
 from typing import Dict, List, Any
-import sys
-import os
-# パスを追加してモジュールを読み込み
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
-
-from nutrition_mapping import NUTRITION_MAPPING, get_column_name
-from fatty_acid_integrator import FattyAcidIntegrator
-from nutrition_constraint_mapper import NutritionConstraintMapper
 
 class FoodCompositionDatabase:
     def __init__(self):
         # プロジェクトルートディレクトリを取得 (/app/src/core -> /app)
         self.base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.excel_path = os.path.join(self.base_dir, 'data', 'raw', '20230428-mxt_kagsei-mext_00001_012.xlsx')
+        self.csv_path = os.path.join(self.base_dir, 'data', 'input', 'nutrition_complete.csv')
         self.food_data = None
-        self.fatty_acid_integrator = FattyAcidIntegrator()
-        self.constraint_mapper = NutritionConstraintMapper()
+        self.metadata = None
         self.load_composition_data()
     
     def load_composition_data(self):
-        """食品成分表からすべての栄養素データを読み込む"""
+        """完全版CSVから食品成分データを読み込む"""
         try:
-            # 表全体シートを使用
-            df = pd.read_excel(self.excel_path, sheet_name='表全体', header=None)
+            # シンプルなCSVファイルを読み込み（ヘッダー + データ行のみ）
+            self.food_data = pd.read_csv(self.csv_path)
             
-            # データは11行目から開始
-            data_start_row = 11
-            data_df = df.iloc[data_start_row:].copy()
+            # メタデータは不要（シンプル化）
+            self.metadata = None
             
-            # 全栄養素データを読み込み
-            nutrition_data = {}
-            for col_index, (jp_name, en_name, unit) in NUTRITION_MAPPING.items():
-                if col_index < len(data_df.columns):
-                    nutrition_data[en_name] = data_df.iloc[:, col_index]
-            
-            self.food_data = pd.DataFrame(nutrition_data)
+            # 食品名列を'名前'のまま保持（統一性のため）
+            # self.food_data = self.food_data.rename(columns={'名前': 'food_name'})
             
             # 食品名でNaNを除去
-            self.food_data = self.food_data.dropna(subset=['food_name'])
-            self.food_data['food_name'] = self.food_data['food_name'].astype(str).str.strip()
+            self.food_data = self.food_data.dropna(subset=['名前'])
+            self.food_data['名前'] = self.food_data['名前'].astype(str).str.strip()
             
             # 数値データをクリーニング
             def clean_numeric(val):
@@ -56,7 +39,7 @@ class FoodCompositionDatabase:
                     return None
                 val_str = str(val).strip()
                 # 特殊記号を処理
-                if val_str in ['*', '-', '(0)', 'Tr', 'tr']:
+                if val_str in ['*', '-', '(0)', 'Tr', 'tr', '']:
                     return 0.0
                 # 括弧を除去 "(11.3)" -> "11.3"
                 val_str = val_str.replace('(', '').replace(')', '')
@@ -67,21 +50,26 @@ class FoodCompositionDatabase:
             
             # 数値列のクリーニング（食品名以外）
             for col in self.food_data.columns:
-                if col != 'food_name':
+                if col != '名前':
                     self.food_data[col] = self.food_data[col].apply(clean_numeric)
             
             # 基本的な栄養素（エネルギー、たんぱく質）が有効なデータのみ残す
-            self.food_data = self.food_data[
-                (self.food_data['energy_kcal'].notna()) & 
-                (self.food_data['protein'].notna())
-            ]
+            energy_col = 'エネルギー'
+            protein_col = 'たんぱく質'
+            
+            if energy_col in self.food_data.columns and protein_col in self.food_data.columns:
+                self.food_data = self.food_data[
+                    (self.food_data[energy_col].notna()) & 
+                    (self.food_data[protein_col].notna())
+                ]
             
             print(f"食品成分データベース: {len(self.food_data)}件の食品データを読み込みました")
-            print(f"栄養素項目数: {len([c for c in self.food_data.columns if c != 'food_name'])}項目")
+            print(f"栄養素項目数: {len([c for c in self.food_data.columns if c != '名前'])}項目")
             
         except Exception as e:
             print(f"食品成分表の読み込みエラー: {e}")
             self.food_data = pd.DataFrame()
+            self.metadata = None
     
     def search_food(self, food_name: str) -> List[Dict[str, Any]]:
         """食品名で検索（部分一致）"""
@@ -90,18 +78,18 @@ class FoodCompositionDatabase:
         
         # 部分一致で検索
         matches = self.food_data[
-            self.food_data['food_name'].str.contains(food_name, na=False, case=False)
+            self.food_data['名前'].str.contains(food_name, na=False, case=False)
         ]
         
         results = []
         for _, row in matches.iterrows():
             try:
-                # 全栄養素データを辞書として格納
-                nutrition_data = {'food_name': row['food_name']}
+                # 全栄養素データを辞書として格納（日本語列名をそのまま使用）
+                nutrition_data = {'名前': row['名前']}
                 
                 # 数値データを適切に丸める
                 for col in self.food_data.columns:
-                    if col != 'food_name' and pd.notna(row[col]):
+                    if col != '名前' and pd.notna(row[col]):
                         val = row[col]
                         if val >= 100:  # 大きな値は小数点1桁
                             nutrition_data[col] = round(val, 1)
@@ -110,16 +98,7 @@ class FoodCompositionDatabase:
                         else:  # 小さな値は小数点3桁
                             nutrition_data[col] = round(val, 3)
                 
-                # 脂肪酸データを統合（n-3, n-6, 飽和脂肪酸）
-                n3_fatty_acid, n6_fatty_acid, saturated_fat = self.fatty_acid_integrator.calculate_fatty_acids(row['food_name'])
-                nutrition_data['n3_fatty_acid'] = round(n3_fatty_acid, 3) if n3_fatty_acid is not None else 0.0
-                nutrition_data['n6_fatty_acid'] = round(n6_fatty_acid, 3) if n6_fatty_acid is not None else 0.0
-                nutrition_data['saturated_fat'] = round(saturated_fat, 3) if saturated_fat is not None else 0.0
-                
-                # 34栄養制約に対応するデータのみを抽出
-                mapped_nutrition_data = self.constraint_mapper.extract_mapped_nutrition_data(nutrition_data)
-                
-                results.append(mapped_nutrition_data)
+                results.append(nutrition_data)
             except Exception:
                 continue
         

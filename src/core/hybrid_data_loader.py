@@ -60,7 +60,8 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
                 constraint['unit'] = str(row['unit'])
             
             if constraint:  # 空でない場合のみ追加
-                nutrition_constraints[row['nutrient_id']] = constraint
+                # シンプル化：日本語名のみを使用
+                nutrition_constraints[row['nutrient_name']] = constraint
         
         print(f"栄養制約: {len(nutrition_constraints)}項目を読み込みました")
     else:
@@ -87,7 +88,7 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         
         # 制約がある場合のみ追加
         if constraint:
-            food_constraints[row['food_name']] = constraint
+            food_constraints[row['名前']] = constraint
     
     print(f"食品制約: {len(food_constraints)}項目を読み込みました")
     
@@ -107,24 +108,19 @@ def load_hybrid_data(base_dir: str) -> Tuple[pd.DataFrame, Dict[str, Any]]:
         sample_foods = foods.head(3)
         print(f"\n食品サンプル:")
         for _, food in sample_foods.iterrows():
-            print(f"  • {food['food_name']}: {food.get('energy_kcal', 'N/A')} kcal, "
-                  f"たんぱく質 {food.get('protein', 'N/A')} g")
+            print(f"  • {food['名前']}: {food.get('エネルギー', 'N/A')} kcal, "
+                  f"たんぱく質 {food.get('たんぱく質', 'N/A')} g")
         
-        nutrition_cols = [col for col in foods.columns if col not in ['food_name', 'price_per_100g']]
+        nutrition_cols = [col for col in foods.columns if col not in ['名前', 'price_per_100g']]
         print(f"\n利用可能な栄養素データ: {len(nutrition_cols)}項目")
     
     # 6. 制約条件のサマリー表示
     if nutrition_constraints:
         print(f"\n栄養制約サマリー:")
+        print(f"  • 合計制約数: {len(nutrition_constraints)}項目")
         
-        # カテゴリ別に表示（CSVにカテゴリがある場合）
-        if os.path.exists(nutrition_constraints_path):
-            category_summary = nutrition_df[nutrition_df['enabled'] == True]['category'].value_counts() if 'enabled' in nutrition_df.columns else nutrition_df['category'].value_counts()
-            for category, count in category_summary.head(5).items():
-                print(f"  • {category}: {count}項目")
-        
-        # 主要制約を表示
-        key_nutrients = ['energy_kcal', 'protein', 'fat', 'carb_available']
+        # 主要制約を表示（日本語名に更新）
+        key_nutrients = ['エネルギー', 'たんぱく質', '脂質', '炭水化物']
         for nutrient in key_nutrients:
             if nutrient in nutrition_constraints:
                 constraint = nutrition_constraints[nutrient]

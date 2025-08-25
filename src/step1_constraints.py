@@ -139,22 +139,20 @@ def create_nutrition_constraints_csv(constraints: Dict[str, Any], output_dir: st
         'molybdenum': 'モリブデン'
     }
     
-    # CSVデータを作成
+    # CSVデータを作成（シンプル化：日本語名のみ使用、category列削除）
     nutrition_data = []
     for nutrient, constraint in constraints.items():
         nutrition_data.append({
-            'nutrient_id': nutrient,
             'nutrient_name': japanese_names.get(nutrient, nutrient),
-            'category': category_mapping.get(nutrient, 'その他'),
             'min_value': constraint.get('min', ''),
             'max_value': constraint.get('max', ''),
             'unit': constraint.get('unit', ''),
             'enabled': 'TRUE'
         })
     
-    # DataFrameに変換してソート
+    # DataFrameに変換してソート（category列削除のため栄養素名でソート）
     nutrition_df = pd.DataFrame(nutrition_data)
-    nutrition_df = nutrition_df.sort_values(['category', 'nutrient_name'])
+    nutrition_df = nutrition_df.sort_values(['nutrient_name'])
     
     # CSV保存
     csv_path = os.path.join(output_dir, 'nutrition_constraints.csv')

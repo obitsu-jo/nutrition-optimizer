@@ -11,7 +11,7 @@ def create_optimization_model(foods: pd.DataFrame, constraints: Dict[str, Any]) 
     # 決定変数：各食品の摂取単位数
     food_vars = {}
     for _, row in foods.iterrows():
-        food_name = row['food_name']
+        food_name = row['名前']  # 日本語列名に対応
         food_vars[food_name] = pulp.LpVariable(
             f"units_{food_name}", 
             lowBound=0, 
@@ -20,7 +20,7 @@ def create_optimization_model(foods: pd.DataFrame, constraints: Dict[str, Any]) 
     
     # 目的関数：総コストの最小化（単位数×価格）
     total_cost = pulp.lpSum([
-        food_vars[row['food_name']] * row['price']
+        food_vars[row['名前']] * row['price']
         for _, row in foods.iterrows()
     ])
     problem += total_cost
@@ -33,7 +33,7 @@ def create_optimization_model(foods: pd.DataFrame, constraints: Dict[str, Any]) 
         if nutrient_name in foods.columns:
             # 栄養素の総摂取量を計算（単位数ベース：単位数×栄養素値）
             total_nutrient = pulp.lpSum([
-                food_vars[row['food_name']] * row[nutrient_name]
+                food_vars[row['名前']] * row[nutrient_name]
                 for _, row in foods.iterrows()
                 if pd.notna(row[nutrient_name])  # NaN値をスキップ
             ])
@@ -91,7 +91,7 @@ def solve_optimization(problem: pulp.LpProblem, food_vars: Dict[str, pulp.LpVari
         for food_name, var in food_vars.items():
             units = pulp.value(var)
             if units > 0.001:  # 微小値は無視
-                food_data = foods[foods['food_name'] == food_name].iloc[0]
+                food_data = foods[foods['名前'] == food_name].iloc[0]
                 result['foods'][food_name] = {
                     'units': round(units, 2),
                     'unit_type': food_data['unit'],
@@ -106,7 +106,7 @@ def solve_optimization(problem: pulp.LpProblem, food_vars: Dict[str, pulp.LpVari
             for nutrient_name in constraints['nutrition_constraints'].keys():
                 if nutrient_name in foods.columns:
                     total_nutrient = sum([
-                        result['foods'].get(row['food_name'], {}).get('units', 0) * row[nutrient_name]
+                        result['foods'].get(row['名前'], {}).get('units', 0) * row[nutrient_name]
                         for _, row in foods.iterrows()
                         if pd.notna(row[nutrient_name])
                     ])
