@@ -13,7 +13,6 @@
       "extensions": [
         "ms-python.python",
         "ms-azuretools.vscode-docker",
-        "Anthropic.claude-code",
         "janisdd.vscode-edit-csv"
       ]
     }
