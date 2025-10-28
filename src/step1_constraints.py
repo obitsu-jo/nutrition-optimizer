@@ -235,12 +235,7 @@ def main():
         print(f"\n生成されたファイル:")
         print(f"  - {file_paths['nutrition_constraints']}")
         print(f"  - {file_paths['calculation_info']}")
-        
-        print(f"\n利点:")
-        print("  - CSV形式: スプレッドシートで編集可能")
-        print("  - カテゴリ別整理: 栄養素を分類して表示")
-        print("  - enabled列: 個別の制約ON/OFF切り替え可能")
-        print("  - JSON形式: 計算パラメータを保存")
+
         
         print(f"\n次のステップ:")
         print("1. CSVファイルを編集して制約を調整（オプション）")

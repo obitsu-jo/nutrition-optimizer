@@ -7,7 +7,6 @@ Step2: 食品情報設定（既存ファイル追加・編集対応版）
 import pandas as pd
 import os
 import sys
-from core.nutrition_mapping import NUTRITION_MAPPING
 
 # パスを追加
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'core'))
