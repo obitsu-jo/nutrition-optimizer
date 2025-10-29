@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # 2. システムパッケージの更新と、開発ツールおよびライブラリのインストール
 RUN apt-get update && apt-get install -y \
     # 開発ツール
-    git vim curl \
+    git vim curl tree \
     # Pygameが依存するライブラリ群
     libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libfreetype6-dev \
     # aptキャッシュのクリーンアップ
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN groupadd -g 1000 vscode && \
     useradd -m -s /bin/bash -u 1000 -g vscode vscode
 
-# 9. 作業ディレクトリの設定と依存関係のインストール
+# 4. 作業ディレクトリの設定と依存関係のインストール
 WORKDIR /app
 COPY --chown=vscode:vscode .devcontainer/requirements.txt .
 RUN pip install uv && \

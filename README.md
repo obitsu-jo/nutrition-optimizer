@@ -255,3 +255,23 @@ python src/step3_optimize.py
 - [日本食品標準成分表2020年版（八訂）](https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html)
 - [日本人の食事摂取基準（2020年版）](https://www.mhlw.go.jp/stf/newpage_08517.html)
 - 線形計画法: Dantzig, G. B. (1963). Linear Programming and Extensions.
+
+.
+├── achieve
+├── docs
+├── resource
+├── step1
+│   ├── setting1_1
+│   ├── setting1_2
+│   └── settomg1_2
+├── step2
+│   ├── setting2_1
+│   ├── setting2_2
+│   └── settomg2_2
+├── step3
+│   ├── setting3_1
+│   │   ├── input
+│   │   └── output
+│   ├── setting3_2
+│   └── setting3_3
+└── src
