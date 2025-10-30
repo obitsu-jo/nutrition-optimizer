@@ -17,7 +17,8 @@ RUN groupadd -g 1000 vscode && \
 # 4. 作業ディレクトリの設定と依存関係のインストール
 WORKDIR /app
 COPY --chown=vscode:vscode .devcontainer/requirements.txt .
-RUN pip install uv && \
+RUN pip install --upgrade pip && \
+    pip install uv && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=vscode:vscode . .
