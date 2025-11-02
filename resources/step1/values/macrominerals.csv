@@ -1,8 +1,6 @@
 nutrient_id,sex_code,life_code,age_band_id,ref_code,value
-# --- ナトリウム(sodium) & 食塩相当量(salt_equivalent) ---
-sodium,M,general,1,AI,100
+# --- 食塩相当量(salt_equivalent) ---
 salt_equivalent,M,general,1,AI,0.3
-sodium,M,general,2,AI,600
 salt_equivalent,M,general,2,AI,1.5
 salt_equivalent,M,general,3,DG_UPPER,3.0
 salt_equivalent,M,general,4,DG_UPPER,3.5
@@ -11,24 +9,17 @@ salt_equivalent,M,general,6,DG_UPPER,5.0
 salt_equivalent,M,general,7,DG_UPPER,6.0
 salt_equivalent,M,general,8,DG_UPPER,7.0
 salt_equivalent,M,general,9,DG_UPPER,7.5
-sodium,M,general,10,EAR,600
 salt_equivalent,M,general,10,EAR,1.5
 salt_equivalent,M,general,10,DG_UPPER,7.5
-sodium,M,general,11,EAR,600
 salt_equivalent,M,general,11,EAR,1.5
 salt_equivalent,M,general,11,DG_UPPER,7.5
-sodium,M,general,12,EAR,600
 salt_equivalent,M,general,12,EAR,1.5
 salt_equivalent,M,general,12,DG_UPPER,7.5
-sodium,M,general,13,EAR,600
 salt_equivalent,M,general,13,EAR,1.5
 salt_equivalent,M,general,13,DG_UPPER,7.5
-sodium,M,general,14,EAR,600
 salt_equivalent,M,general,14,EAR,1.5
 salt_equivalent,M,general,14,DG_UPPER,7.5
-sodium,F,general,1,AI,100
 salt_equivalent,F,general,1,AI,0.3
-sodium,F,general,2,AI,600
 salt_equivalent,F,general,2,AI,1.5
 salt_equivalent,F,general,3,DG_UPPER,2.5
 salt_equivalent,F,general,4,DG_UPPER,3.5
@@ -37,25 +28,18 @@ salt_equivalent,F,general,6,DG_UPPER,5.0
 salt_equivalent,F,general,7,DG_UPPER,6.0
 salt_equivalent,F,general,8,DG_UPPER,6.5
 salt_equivalent,F,general,9,DG_UPPER,6.5
-sodium,F,general,10,EAR,600
 salt_equivalent,F,general,10,EAR,1.5
 salt_equivalent,F,general,10,DG_UPPER,6.5
-sodium,F,general,11,EAR,600
 salt_equivalent,F,general,11,EAR,1.5
 salt_equivalent,F,general,11,DG_UPPER,6.5
-sodium,F,general,12,EAR,600
 salt_equivalent,F,general,12,EAR,1.5
 salt_equivalent,F,general,12,DG_UPPER,6.5
-sodium,F,general,13,EAR,600
 salt_equivalent,F,general,13,EAR,1.5
 salt_equivalent,F,general,13,DG_UPPER,6.5
-sodium,F,general,14,EAR,600
 salt_equivalent,F,general,14,EAR,1.5
 salt_equivalent,F,general,14,DG_UPPER,6.5
-sodium,F,pregnant,10,EAR,600
 salt_equivalent,F,pregnant,10,EAR,1.5
 salt_equivalent,F,pregnant,10,DG_UPPER,6.5
-sodium,F,lactating,10,EAR,600
 salt_equivalent,F,lactating,10,EAR,1.5
 salt_equivalent,F,lactating,10,DG_UPPER,6.5
 # --- カリウム (potassium) ---

@@ -1,4 +1,10 @@
 nutrient_id,nutrient_name,unit
+energy,エネルギー,kcal/d
+protein,アミノ酸組成によるたんぱく質,g/d
+saturated_fatty_acids,飽和脂肪酸,g/d
+n6_fatty_acids,n-6系脂肪酸,g/d
+n3_fatty_acids,n-3系脂肪酸,g/d
+carbohydrate,利用可能炭水化物（単糖当量）,g/d
 fiber,食物繊維,g/d
 vitamin_a,ビタミンA,µgRAE/d
 vitamin_d,ビタミンD,µg/d
@@ -7,16 +13,12 @@ vitamin_k,ビタミンK,µg/d
 vitamin_b1,ビタミンB1,mg/d
 vitamin_b2,ビタミンB2,mg/d
 niacin,ナイアシン,mgNE/d
-niacin_amide,ニコチンアミド,mg/d
-niacin_acid,ニコチン酸,mg/d
 vitamin_b6,ビタミンB6,mg/d
 vitamin_b12,ビタミンB12,µg/d
 folate,葉酸,µg/d
-folic_acid,葉酸(プテロイルモノグルタミン酸),µg/d
 pantothenic_acid,パントテン酸,mg/d
 biotin,ビオチン,µg/d
 vitamin_c,ビタミンC,mg/d
-sodium,ナトリウム,mg/d
 salt_equivalent,食塩相当量,g/d
 potassium,カリウム,mg/d
 calcium,カルシウム,mg/d

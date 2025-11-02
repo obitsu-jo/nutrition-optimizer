@@ -2,6 +2,7 @@ from functools import cached_property
 from typing import Literal, Optional
 from dataclasses import dataclass
 import polars as pl
+import json
 
 @dataclass
 class UserProfile:
@@ -13,14 +14,12 @@ class UserProfile:
     life_code: Literal["general", "pregnant_early", "pregnant_mid_late", "lactating"] = "general"
 
 class NutrientsCalculator:
-    MACRONUTRIENTS = ["energy", "protein", "saturated_fatty_acids", "n6_fatty_acids", "n3_fatty_acids", "carbohydrate"]
-    MACRONUTRIENT_UNITS = ["kcal", "g", "g", "g", "g", "g"]
     EER_METHOD = "ganpule" # "harris_benedict" or "ganpule"
 
-    AGE_BANDS_PATH = "/app/resources/age_bands.csv"
-    REF_TYPES_PATH = "/app/resources/ref_types.csv"
+    AGE_BANDS_PATH = "/app/resources/step1/age_bands.csv"
+    REF_TYPES_PATH = "/app/resources/step1/ref_types.csv"
     NUTRIENT_IDS_PATH = "/app/resources/nutrient_ids.csv"
-    VALUES_DIR = "resources/values/"
+    VALUES_DIR = "resources/step1/values/"
     LIST_FILE_NAME = ["fiber", "fat_soluble_vitamins", "water_soluble_vitamins", "macrominerals", "microminerals"]
 
     def __init__(self, user: UserProfile, lower_ref_codes: list[str] = ["RDA", "AI", "DG_LOWER", "EAR"], upper_ref_codes: list[str] = ["UL", "DG_UPPER"]):
@@ -56,8 +55,6 @@ class NutrientsCalculator:
     def dict_nutrient_unit(self) -> dict[str, str]:
         df_nutrient_ids = pl.read_csv(self.NUTRIENT_IDS_PATH)
         dict_nutrient_unit = {nutrient_id: df_nutrient_ids.filter(pl.col("nutrient_id") == nutrient_id)["unit"].to_list()[0] for nutrient_id in self.nutrient_ids}
-        for nutrient_id, unit in zip(self.MACRONUTRIENTS, self.MACRONUTRIENT_UNITS):
-            dict_nutrient_unit[nutrient_id] = unit
         return dict_nutrient_unit
 
     @cached_property
@@ -87,7 +84,7 @@ class NutrientsCalculator:
                 # age_band_idによってフィルタリング
                 df_tmp = df_tmp.filter(pl.col("age_band_id") == self.age_band_id).drop("age_band_id")
                 # life_codeによってフィルタリング
-                df_tmp = df_tmp.filter(pl.col("life_code") == self.life_code).drop("life_code")
+                df_tmp = df_tmp.filter(pl.col("life_code").is_in([self.life_code, "general"]))
                 list_of_dfs.append(df_tmp)
             except Exception as e:
                 print(f"Error reading {file_path}: {e}")
@@ -188,9 +185,11 @@ class NutrientsCalculator:
         elif nutrient_id == "carbohydrate":
             return self.get_carbohydrate(ref_code)
 
-        value = self.df_values.filter((pl.col("nutrient_id") == nutrient_id) & (pl.col("ref_code") == ref_code))["value"]
+        value = self.df_values.filter((pl.col("nutrient_id") == nutrient_id) & (pl.col("ref_code") == ref_code) & (pl.col("life_code") == self.life_code))["value"]
         if value.is_empty():
-            return None
+            value = self.df_values.filter((pl.col("nutrient_id") == nutrient_id) & (pl.col("ref_code") == ref_code) & (pl.col("life_code") == "general"))["value"]
+            if value.is_empty():
+                return None
         return value[0]
 
     def get_nutrient_value_by_settings(self, nutrient_id: str):
@@ -204,19 +203,16 @@ class NutrientsCalculator:
                 break
         return lower_value, upper_value
 
-    def get_dict_nutrient_value(self):
-        all_nutrient_ids = self.MACRONUTRIENTS + self.nutrient_ids
+    @cached_property
+    def dict_nutrient_value(self):
+        all_nutrient_ids = self.nutrient_ids
         return {nutrient_id: self.get_nutrient_value_by_settings(nutrient_id) for nutrient_id in all_nutrient_ids}
 
-    def save_to_csv(self, dict_nutrient_value, dict_nutrient_unit, output_path):
-        """
-        栄養素のデータをpolarsを使ってCSVファイルに保存する関数
-
-        Args:
-            dict_nutrient_value (dict): 栄養素のIDをキー、(下限値, 上限値)のタプルを値とする辞書
-            dict_nutrient_unit (dict): 栄養素のIDをキー、単位を値とする辞書
-            output_path (str): 出力先のCSVファイルパス
-        """
+    def save_nutrient_values_to_csv(self, output_path: str, dict_nutrient_value: dict[str, tuple[Optional[float], Optional[float]]] = None, dict_nutrient_unit: dict[str, str] = None):
+        if dict_nutrient_value is None:
+            dict_nutrient_value = self.dict_nutrient_value
+        if dict_nutrient_unit is None:
+            dict_nutrient_unit = self.dict_nutrient_unit
         # データをpolars DataFrameに適した形式に変換
         data_for_df = []
         for key, (lower, upper) in dict_nutrient_value.items():
@@ -233,13 +229,20 @@ class NutrientsCalculator:
         # CSVファイルへの書き出し
         df.write_csv(output_path)
 
+    def save_user_profile_to_json(self, output_path: str):
+        data = {
+            "sex_code": self.sex_code,
+            "weight": self.weight,
+            "height": self.height,
+            "age": self.age,
+            "activity_level": self.activity_level,
+            "life_code": self.life_code
+        }
+        with open(output_path, "w") as f:
+            json.dump(data, f)
+
 if __name__ == "__main__":
     # テストコード
-    user = UserProfile(sex_code="M", weight=55, height=165, age=23, activity_level=1.75)
+    user = UserProfile(sex_code="F", weight=55, height=165, age=27, activity_level=1.75, life_code="pregnant_mid_late")
     nutrientsCalculator = NutrientsCalculator(user)
-    dict_nutrient_value = nutrientsCalculator.get_dict_nutrient_value()
-    dict_nutrient_unit = nutrientsCalculator.dict_nutrient_unit
-    
-    # CSVファイルへの保存
-    output_path = "nutrients_polars.csv"
-    nutrientsCalculator.save_to_csv(dict_nutrient_value, dict_nutrient_unit, output_path)
+    nutrientsCalculator.save_nutrient_values_to_csv("test_nutrient_values.csv")
