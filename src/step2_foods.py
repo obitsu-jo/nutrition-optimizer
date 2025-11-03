@@ -35,7 +35,7 @@ def main(args: argparse.Namespace):
     output_path = f"/app/data/step2_foods/{args.setting_name}/food_nutrient_data.csv"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     if os.path.exists(output_path):
-        df_output = pl.read_csv(output_path)
+        df_output = pl.read_csv(output_path, schema=df_input.schema)
     else:
         df_output = pl.DataFrame(schema=df_input.schema)
     
@@ -102,6 +102,9 @@ def main(args: argparse.Namespace):
         for col_name in df_food_completed.columns:
             # food_nameはチェック不要
             if col_name == "food_name":
+                continue
+
+            if col_name == "min" or col_name == "max":
                 continue
 
             # Polarsでは .is_null() で欠損値を判定

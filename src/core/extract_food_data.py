@@ -45,21 +45,26 @@ if __name__ == "__main__":
 
     rename_map = dict(zip(nutrient_names, nutrient_ids))
 
+    # 最小と最大をunitの単位で設定できるようにする
+    # ここではすべて空欄にする
+    min_col = pl.lit(None).cast(pl.Float64).alias("min")
+    max_col = pl.lit(None).cast(pl.Float64).alias("max")
+
+    # このデータはすべて100gあたりの値なので、amountとunitの列を追加
+    amount_col = pl.lit(100).alias("amount")
+    unit_col = pl.lit("g").alias("unit")
+
+    # 値段は空欄で追加
+    cost_col = pl.lit(None).cast(pl.Float64).alias("cost")
+
     # df_fundamentalとdf_fatを食品名で結合
     df_merged = df_fundamental.join(df_fat, on="食品名", how="inner", suffix="_fat")
     df_final = df_merged.select(
     [pl.col("食品名").alias("food_name")] +
+    [cost_col, amount_col, min_col, max_col, unit_col] +
     [pl.col(name).alias(rename_map.get(name, name)) for name in nutrient_names]
     )
 
-    # このデータはすべて100gあたりの値なので、quantityとunitの列を追加
-    quantity_col = pl.lit(100).alias("quantity")
-    unit_col = pl.lit("g").alias("unit")
-    df_final = df_final.with_columns([quantity_col, unit_col])
-
-    # 値段は空欄で追加
-    price_col = pl.lit(None).cast(pl.Float64).alias("price")
-    df_final = df_final.with_columns([price_col])
 
     df_final.write_csv(FOOD_NUTRIENT_DATA_PATH)
     print("食品栄養データの抽出と保存が完了しました。")

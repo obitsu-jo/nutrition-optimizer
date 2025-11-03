@@ -1,182 +1,75 @@
-#!/usr/bin/env python3
-"""
-Step3: 最適化計算
-制約条件と食品データを基に栄養最適化を実行する
-"""
-
-import os
-import sys
+import argparse
 import json
-from datetime import datetime
+import os
+import polars as pl
+from core.optimizer import *
 
-# パスを追加
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(current_dir, 'core'))
+def load_settings(args: argparse.Namespace):
+    setting_name = args.setting_name
+    output_dir = f"/app/data/step3_optimize/{setting_name}/"
+    user_profile_path = os.path.join(output_dir, "user_profile.json")
+    if os.path.exists(user_profile_path) and args.use_profile:
+        print("設定ファイルが見つかりました。")
+        with open(user_profile_path, "r") as f:
+            profile_data = json.load(f)
+            setting_name_1 = profile_data["setting_name_1"]
+            setting_name_2 = profile_data["setting_name_2"]
+    else:
+        print("設定ファイルが見つかりません。コマンドライン引数から設定名を取得します。")
+        if args.setting_name_1 is None or args.setting_name_2 is None:
+            raise ValueError("設定名1および設定名2をコマンドライン引数で指定してください。")
+        setting_name_1 = args.setting_name_1
+        setting_name_2 = args.setting_name_2
+        profile_data = {
+            "setting_name_1": setting_name_1,
+            "setting_name_2": setting_name_2
+        }
+        os.makedirs(output_dir, exist_ok=True)
+        with open(user_profile_path, "w") as f:
+            json.dump(profile_data, f, indent=4)
+        print(f"設定ファイルを保存しました: {user_profile_path}")
+    return setting_name, setting_name_1, setting_name_2
 
-from hybrid_data_loader import load_hybrid_data
-from optimizer import create_optimization_model, solve_optimization
+def load_data(setting_name_1: str, setting_name_2: str):
+    setting_1_path = f"/app/data/step1_constraints/{setting_name_1}/nutrient_constraints.csv"
+    setting_2_path = f"/app/data/step2_foods/{setting_name_2}/food_nutrient_data.csv"
+    if not os.path.exists(setting_1_path):
+        raise FileNotFoundError(f"設定1の制約条件ファイルが見つかりません: {setting_1_path}")
+    if not os.path.exists(setting_2_path):
+        raise FileNotFoundError(f"設定2の食品データファイルが見つかりません: {setting_2_path}")
+    df_constraints = pl.read_csv(setting_1_path)
+    df_foods = pl.read_csv(setting_2_path)
+    return df_constraints, df_foods
 
-def check_prerequisites():
-    """前提条件をチェック"""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    foods_path = os.path.join(base_dir, 'data', 'input', 'foods.csv')
-    nutrition_constraints_path = os.path.join(base_dir, 'data', 'input', 'nutrition_constraints.csv')
-    calculation_info_path = os.path.join(base_dir, 'data', 'input', 'calculation_info.json')
-    
-    issues = []
-    
-    if not os.path.exists(foods_path):
-        issues.append("foods.csv が見つかりません → src/step2_foods.py を実行してください")
-    
-    if not os.path.exists(nutrition_constraints_path):
-        issues.append("nutrition_constraints.csv が見つかりません → src/step1_constraints.py を実行してください")
-    
-    if not os.path.exists(calculation_info_path):
-        issues.append("calculation_info.json が見つかりません → src/step1_constraints.py を実行してください")
-    
-    if issues:
-        print("=== 前提条件エラー ===")
-        for issue in issues:
-            print(issue)
-        return False
-    
-    return True
+def main(args: argparse.Namespace):
+    setting_name, setting_name_1, setting_name_2 = load_settings(args)
+    df_constraints, df_foods = load_data(setting_name_1, setting_name_2)
 
-def save_results(result, foods, constraints):
-    """結果を保存"""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    output_dir = os.path.join(base_dir, 'data', 'output')
-    os.makedirs(output_dir, exist_ok=True)
-    
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    result_file = os.path.join(output_dir, f"optimization_result_{timestamp}.json")
-    
-    # 結果データを整理
-    output_data = {
-        "timestamp": datetime.now().isoformat(),
-        "status": result['status'],
-        "optimal": result['optimal'],
-        "total_cost_yen": result.get('total_cost', 0),
-        "foods": result.get('foods', {}),
-        "nutrition": result.get('nutrition', {}),
-        "constraints_used": constraints,
-        "foods_available": len(foods)
-    }
-    
-    # JSONファイルに保存
-    with open(result_file, 'w', encoding='utf-8') as f:
-        json.dump(output_data, f, ensure_ascii=False, indent=2)
-    
-    print(f"詳細結果を保存: {result_file}")
+    # 基本となる出力パスを定義
+    base_output_path = f"/app/data/step3_optimize/{setting_name}/results.csv"
 
-def main():
-    """メイン処理"""
-    print("=== Step3: 栄養最適化計算 ===\n")
+    # 新しいラッパー関数を呼び出す
+    prob, status = find_optimal_solution_iteratively(
+        df_foods,
+        df_constraints,
+        base_output_path
+    )
+
+    # 最終的なステータスを表示
+    if status == pulp.LpStatusOptimal:
+        print("\n最適化プロセスが正常に完了しました。")
+    else:
+        print("\n最適化プロセスは実行可能な解を見つけることができませんでした。")
+
     
-    # 前提条件チェック
-    if not check_prerequisites():
-        return False
-    
-    # データファイルのパス
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    input_dir = os.path.join(base_dir, 'data', 'input')
-    
-    try:
-        # ハイブリッド形式データ読み込み
-        print("ハイブリッド形式データを読み込んでいます...")
-        foods, constraints = load_hybrid_data(base_dir)
-        
-        # 最適化モデル作成
-        print("最適化モデルを作成しています...")
-        problem, food_vars = create_optimization_model(foods, constraints)
-        
-        # 最適化実行
-        print("最適化を実行しています...\n")
-        result = solve_optimization(problem, food_vars, foods, constraints)
-        
-        # 結果表示
-        print("=" * 50)
-        print("最適化結果")
-        print("=" * 50)
-        print(f"ステータス: {result['status']}")
-        
-        if result['optimal']:
-            print(f"最小コスト: {result['total_cost']:.2f}円/日")
-            
-            print(f"\n推奨食品と摂取量:")
-            for food_name, info in result['foods'].items():
-                print(f"  • {food_name}")
-                print(f"    摂取量: {info['units']:.2f} {info['unit_type']}")
-                print(f"    コスト: {info['cost']:.2f}円")
-            
-            print(f"\n栄養成分（制約有効項目）:")
-            
-            # 制約から栄養素名とラベルを取得
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            constraints_path = os.path.join(base_dir, 'data', 'input', 'nutrition_constraints.csv')
-            
-            try:
-                import pandas as pd
-                constraints_df = pd.read_csv(constraints_path)
-                nutrient_labels = dict(zip(constraints_df['nutrient_id'], constraints_df['nutrient_name']))
-                nutrient_units = dict(zip(constraints_df['nutrient_id'], constraints_df['unit']))
-            except:
-                nutrient_labels = {}
-                nutrient_units = {}
-            
-            for nutrient, value in result['nutrition'].items():
-                # 栄養素名とラベルを取得
-                label = nutrient_labels.get(nutrient, nutrient)
-                unit = nutrient_units.get(nutrient, '')
-                
-                # 制約範囲と比較
-                constraint = constraints.get('nutrition_constraints', {}).get(nutrient, {})
-                min_val = constraint.get('min', '')
-                max_val = constraint.get('max', '')
-                
-                # 範囲文字列を作成
-                if min_val != '' and max_val != '':
-                    range_str = f" (目標: {min_val}-{max_val})"
-                elif min_val != '':
-                    range_str = f" (最低: {min_val})"
-                elif max_val != '':
-                    range_str = f" (上限: {max_val})"
-                else:
-                    range_str = ""
-                
-                print(f"  • {label}: {value} {unit}{range_str}")
-            
-            
-            # 結果保存
-            save_results(result, foods, constraints)
-            
-            print(f"\n最適化が成功しました！")
-            
-        else:
-            print("最適解が見つかりませんでした。")
-            print("\n解決方法:")
-            print("1. 制約条件を緩和する (src/step1_constraints.py)")
-            print("2. より多くの食品を追加する (src/step2_foods.py)")
-            print("3. 食品の摂取上限を増やす")
-            
-            return False
-            
-    except FileNotFoundError as e:
-        print(f"ファイルが見つかりません: {e}")
-        return False
-    except Exception as e:
-        print(f"エラーが発生しました: {e}")
-        return False
-    
-    return True
+
 
 if __name__ == "__main__":
-    try:
-        success = main()
-        if success:
-            print(f"\n処理が完了しました。")
-        else:
-            sys.exit(1)
-    except KeyboardInterrupt:
-        print("\n\n操作が中断されました。")
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--setting_name", type=str, required=True, help="設定名")
+    parser.add_argument("-s1", "--setting_name_1", type=str, required=False, help="設定名1")
+    parser.add_argument("-s2", "--setting_name_2", type=str, required=False, help="設定名2")
+    parser.add_argument("-u", "--use_profile", action="store_true", help="ファイルから設定を読み込む場合に指定")
+    args = parser.parse_args()
+
+    main(args)
