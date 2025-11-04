@@ -113,6 +113,10 @@ dmypy.json
 *~
 
 # Project specific
-data/output/
-*.log
-.DS_Store
+/app/src/__pycache__/
+/app/resources/step2/custom/
+/app/resources/step2/raw/
+/app/data/
+!/app/data/step1/sample/
+!/app/data/step2/sample/
+!/app/data/step3/sample/
