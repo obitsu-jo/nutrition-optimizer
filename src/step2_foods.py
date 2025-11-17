@@ -24,6 +24,15 @@ def load_food_nutrient_data():
             if filename.endswith(".csv"):
                 custom_data_path = os.path.join(CUSTOM_FOOD_NUTRIENT_DATA_DIR, filename)
                 df_custom = pl.read_csv(custom_data_path)
+                df_custom = df_custom.with_columns(
+                    pl.col("food_name").cast(pl.Utf8),
+                    pl.col("unit").cast(pl.Utf8)
+                )
+                for col_name in df_custom.columns:
+                    if col_name not in ["food_name", "unit"]:
+                        df_custom = df_custom.with_columns(
+                            pl.col(col_name).cast(pl.Float64, strict=False)
+                        )
                 df_input = df_input.filter(~pl.col("food_name").is_in(df_custom["food_name"]))
                 df_input = pl.concat([df_input, df_custom])
     return df_input

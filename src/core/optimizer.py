@@ -22,7 +22,7 @@ def find_optimal_solution_iteratively(df_foods, df_constraints, base_output_path
     # 修正点: pulp.LpStatus['Optimal'] -> pulp.LpStatusOptimal
     if status == pulp.LpStatusOptimal:
         print(">>> 成功: 全ての制約を満たす最適解が見つかりました。")
-        save_results_to_csv(prob.variables(), df_foods, base_output_path)
+        save_results_to_csv(prob.variables(), df_foods, base_output_path, df_constraints)
         return prob, status
 
     print(">>> 失敗: 最適解が見つかりませんでした。制約の緩和を開始します。")
@@ -56,7 +56,7 @@ def find_optimal_solution_iteratively(df_foods, df_constraints, base_output_path
                 output_filename = f"results_without_{removed_str}.csv"
                 output_path = os.path.join(output_dir, output_filename)
                 
-                save_results_to_csv(prob.variables(), df_foods, output_path)
+                save_results_to_csv(prob.variables(), df_foods, output_path, df_constraints)
                 return prob, status
 
     # --- Step 4: 全ての試行が失敗 ---
@@ -119,7 +119,7 @@ def solve_optimization_problem(df_foods, df_constraints, constraints_to_ignore=N
     prob.solve(pulp.PULP_CBC_CMD(msg=0))
     return prob, prob.status
 
-def save_results_to_csv(prob_variables, df_foods: pl.DataFrame, output_path: str):
+def save_results_to_csv(prob_variables, df_foods: pl.DataFrame, output_path: str, df_constraints: pl.DataFrame):
     food_data_map = {f["food_name"]: f for f in df_foods.to_dicts()}
     results_data = []
     nutrient_columns = [col for col in df_foods.columns if col not in ["food_name", "amount", "min", "max", "unit", "cost"]]
@@ -149,6 +149,26 @@ def save_results_to_csv(prob_variables, df_foods: pl.DataFrame, output_path: str
     df_results = pl.DataFrame(results_data)
     final_columns = ["food_name", "cost", "amount", "unit"] + nutrient_columns
     df_results = df_results.select(final_columns)
+
+    list_lower = df_constraints.select(["nutrient_id", "lower"]).rows() # [(nutrient_id, lower)]
+    add_data = {
+        "food_name": "achievement_rate (%)",
+        "cost": None,
+        "amount": None,
+        "unit": None
+    }
+    for nutrient_id, lower in list_lower:
+        if lower is not None:
+            achievement_rate = (totals[nutrient_id] / lower) * 100 if lower != 0 else None
+            add_data[nutrient_id] = achievement_rate if achievement_rate is not None else None
+            add_data[nutrient_id]
+        else:
+            add_data[nutrient_id] = None
+
+    
+    df_results = df_results.vstack(pl.DataFrame([add_data]))
+
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df_results.write_csv(output_path)
     print(f"\n結果がCSVファイルに出力されました: {output_path}")
