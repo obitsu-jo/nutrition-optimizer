@@ -113,12 +113,12 @@ dmypy.json
 *~
 
 # Project specific
-/app/src/__pycache__/
-/app/resources/step2/custom/*
-/app/resources/step2/raw/
-/app/data/step1_constraints/*
-/app/data/step2_foods/*
-/app/data/step3_optimize/*
-!/app/data/step1_constraints/sample/
-!/app/data/step2_foods/sample/
-!/app/data/step3_optimize/sample/
+/src/__pycache__/
+/resources/step2/custom/*
+/resources/step2/raw/
+/data/step1_constraints/*
+/data/step2_foods/*
+/data/step3_optimize/*
+!/data/step1_constraints/sample
+!/data/step2_foods/sample
+!/data/step3_optimize/sample
