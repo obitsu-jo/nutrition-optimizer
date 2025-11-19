@@ -1,11 +1,11 @@
 nutrient_id,lower,upper,unit
-energy,2410.367892976589,,kcal/d
-protein,50.1875,,g/d
-saturated_fatty_acids,,18.74730583426236,g/d
-n6_fatty_acids,10.712746191007062,,g/d
-n3_fatty_acids,1.6069119286510594,,g/d
+energy,2208.619206880077,,kcal/d
+protein,45.625,,g/d
+saturated_fatty_acids,,17.178149386845046,g/d
+n6_fatty_acids,9.816085363911453,,g/d
+n3_fatty_acids,1.472412804586718,,g/d
 carbohydrate,,,g/d
-fiber,20.0,40,g/d
+fiber,20.0,,g/d
 vitamin_a,850.0,2700.0,µgRAE/d
 vitamin_d,9.0,100.0,µg/d
 vitamin_e,6.5,800.0,mg/d
